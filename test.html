@@ -1,24 +1,81 @@
 <!DOCTYPE html>
+<html>
+
 <head>
+    <title>JavaScript Loan Calculator</title>
+    <style>
 
+    </style>
 </head>
-<body>
-    <script>
-        var books = {
-            topic : "JavaScript",
-            good : true
-        }
 
-        var i = 0;
-        while(i < 10) {
-            console.log(i);
-            i++;
+<body>
+    <table>
+        <tr>
+            <th> Enter Loan Data: </th>
+            <td></td>
+            <th>Loan Balance, Cumulative Equity, and Interest Payments</th>
+        </tr>
+        <tr>
+            <td>Amount of the loan ($):</td>
+            <td><input id="amount" onchange="calculate();"></td>
+            <td rowspan=8>
+                <canvas id="graph" width="400" height="250"></canvas>
+            </td>
+        </tr>
+        <tr>
+            <td>Annual interest (%):</td>
+            <td><input id="apr" onchange="calculate();"></td>
+        </tr>
+        <tr>
+            <td>Repayment period (years):</td>
+            <td><input id="amount" onchange="calculate();"></td>
+        </tr>
+        <tr>
+            <td>Amount of the loan ($):</td>
+            <td><input id="amount" onchange="calculate();"></td>
+        </tr>
+        <tr>
+            <td>Approximate Payments: </td>
+            <td><button onClick="calculate();">Calculate</button></td>
+        </tr>
+        <tr>
+            <td>Monthly Payment: </td>
+            <td>$<span class="output" id="payment"></span></td>
+        </tr>
+        <tr>
+            <td>Total Payment: </td>
+            <td>$<span class="output" id="total"></span></td>
+        </tr>
+        <tr>
+            <td>Total interest: </td>
+            <td>$<span class="output" id="totalinterest"></span></td>
+        </tr>
+    </table>
+
+    <script>
+        var amount = document.getElementById("amount");
+        var apr = document.getElementById("apr");
+        var years = document.getElementById("years");
+        var zipcode = document.getElementById("zipcode");
+        var payment = document.getElementById("payment");
+        var total = document.getElementById("total");
+        var totalinterest = document.getElementById("totalinterest");
+
+        var principal = parseFloat(amount.value);
+        var interest = parseFloat(apr.value / 100 / 12);
+        var payments = parseFloat(years.value) * 12;
+
+        var x = Math.pow(1 + interest, payments);
+        var monthly = (principal * x * interest) / (x - 1);
+
+        //isFinite은 js기본함수인듯 
+        if (isFinite(monthly)) {
+            payment.innerHTML = monthly.toFixed(2);
+            total.innerHTML = (monthly * payments).toFixed(2);
+            totalinterest.innerHTML = ((monthly * payments) - principal).toFixed(2);
         }
-        for(i = 0;i<10;i+=2) {
-            console.log(i);
-            document.write(i);
-        }
-        
-        console.log(topic)
     </script>
+
 </body>
+
+</html>
