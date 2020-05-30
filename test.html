@@ -28,11 +28,11 @@
         </tr>
         <tr>
             <td>Repayment period (years):</td>
-            <td><input id="amount" onchange="calculate();"></td>
+            <td><input id="years" onchange="calculate();"></td>
         </tr>
         <tr>
-            <td>Amount of the loan ($):</td>
-            <td><input id="amount" onchange="calculate();"></td>
+            <td>Zip code:</td>
+            <td><input id="zipcode" onchange="calculate();"></td>
         </tr>
         <tr>
             <td>Approximate Payments: </td>
@@ -50,29 +50,182 @@
             <td>Total interest: </td>
             <td>$<span class="output" id="totalinterest"></span></td>
         </tr>
+        <tr>
+            <td colspan=2>
+                Apply for your loan with one of these fine lenders:
+                <div id="lenders"></div>
+            </td>
+        </tr>
     </table>
 
     <script>
-        var amount = document.getElementById("amount");
-        var apr = document.getElementById("apr");
-        var years = document.getElementById("years");
-        var zipcode = document.getElementById("zipcode");
-        var payment = document.getElementById("payment");
-        var total = document.getElementById("total");
-        var totalinterest = document.getElementById("totalinterest");
 
-        var principal = parseFloat(amount.value);
-        var interest = parseFloat(apr.value / 100 / 12);
-        var payments = parseFloat(years.value) * 12;
+        "use strict"; // ECMAScript 5 strict mode 사용. --> javascript 가 묵인했던 에러 발생시킴. 엄격하게 문법검사 하겠다.
+        function calculate() {
+            var amount = document.getElementById("amount");
+            var apr = document.getElementById("apr");
+            var years = document.getElementById("years");
+            var zipcode = document.getElementById("zipcode");
+            var payment = document.getElementById("payment");
+            var total = document.getElementById("total");
+            var totalinterest = document.getElementById("totalinterest");
 
-        var x = Math.pow(1 + interest, payments);
-        var monthly = (principal * x * interest) / (x - 1);
+            var principal = parseFloat(amount.value);
+            var interest = parseFloat(apr.value / 100 / 12); // interest % 로 오니까 100 나누고 월할로 
+            var payments = parseFloat(years.value) * 12; // 월할 계산 위해 
 
-        //isFinite은 js기본함수인듯 
-        if (isFinite(monthly)) {
-            payment.innerHTML = monthly.toFixed(2);
-            total.innerHTML = (monthly * payments).toFixed(2);
-            totalinterest.innerHTML = ((monthly * payments) - principal).toFixed(2);
+            var x = Math.pow(1 + interest, payments); // 
+            var monthly = (principal * x * interest) / (x - 1);
+
+            //isFinite은 js기본함수인듯 
+            if (isFinite(monthly)) {
+                payment.innerHTML = monthly.toFixed(2);
+                total.innerHTML = (monthly * payments).toFixed(2);
+                totalinterest.innerHTML = ((monthly * payments) - principal).toFixed(2);
+
+                save(amount.value, apr.value, years.value, zipcode.value);
+
+                console.log("inter try state");
+                try {
+                    console.log("try");
+                    getLenders(amount.value, apr.value, years.value, zipcode.value);
+                }
+                catch (e) { console.log(e) };
+
+                chart(principal, interest, monthly, payments);
+            }
+        }
+
+        function save(amount, apr, years, zipcode) {
+            if (window.localStorage) {
+                localStorage.loan_amount = amount;
+                localStorage.loan_apr = apr;
+                localStorage.years = years;
+                localStorage.zip_code = zipcode;
+            }
+        }
+
+        window.onload = function () {
+            if (window.localStorage && localStorage.loan_amount) {
+                document.getElementById("amount").value = localStorage.loan_amount;
+                document.getElementById("apr").value = localStorage.loan_apr;
+                document.getElementById("years").value = localStorage.loan_years;
+                document.getElementById("zipcode").value = localStorage.loan_zipcode;
+            }
+        }
+
+        function getLenders(amount, apr, years, zipcode) {
+
+            if(!window.XMLHttpRequest) {
+                return; // 브라우저가 XMLHttpRequest 지원하지 않으면 do nothing
+            }
+
+            var ad = document.getElementById("lenders");
+            if(!ad) {
+                console.log("no add  : ", ad);
+                return; 
+            }
+            return ;
+            //실제로 대부업체 찾는 php를 구현한다면 이렇게 사용하다는 것.
+            var url = "getLenders.php" +
+                "?amt" + encodeURIComponent(amount) +
+                "&apr" + encodeURIComponent(apr) +
+                "&yrs" + encodeURIComponent(years) +
+                "&zip" + encodeURIComponent(zipcode);
+            console.log(url);
+
+            var req = new XMLHttpRequest();
+            req.open("GET", url);
+            req.send(null);
+
+            req.onreadystatechange = function () {
+                if(req.readyState == 4 && req.status == 200) {
+                    var response = req.responseText;
+                    var lenders = JSON.parse(response);
+
+                    var list = "";
+                    for (var i = 0; i < lenders.length; i++) {
+                        list += "<li><a href='" + lenders[i].url + "'>" + lenders[i].name + "</a>";
+                    }
+
+                    ad.innerHTML = "<ul>" + list + "</ul>"
+                }
+            }
+        }
+
+        function chart(principal, interest, monthly, payments) {
+            //canvers의 것 가져온다. 
+            var graph = document.getElementById("graph");
+            graph.width = graph.width; // 초기화
+
+            //인자 없으면 브라우저에서 지원 안한다. 바로 return 
+            if (arguments.length == 0 || !graph.getContext) return;
+
+            var g = graph.getContext("2d"); // 모든 드로잉은 이 객체로 
+            // canvers --> 직사각형, path 딱 이 2가지 도형으로 그릴 수 있음. 
+            var width = graph.width, height = graph.height;
+
+            // function 안에 function 
+            function paymentToX(n) { return n * width / payments; }
+            function amountToY(a) { return height - (a * height / (monthly * payments * 1.05)); }
+
+            //path를 이용한 그리는 방법. 
+            g.moveTo(paymentToX(0), amountToY(0));
+            g.lineTo(paymentToX(payments), amountToY(monthly * payments)); // 0,0에서 payments , monthly * payments로
+            g.lineTo(paymentToX(payments), amountToY(0));
+            g.closePath();
+            g.fillStyle = "#f88";
+            g.fill();// 이게 없으면 안그림
+            g.font = "bold 12px sans-serif";
+            g.fillText("Total Interest Payments", 20, 20); 
+
+            var equity = 0;
+            g.beginPath();
+            g.moveTo(paymentToX(0), amountToY(0));
+            for (var p = 1; p <= payments; p++) { // 각각찍기때문에 스무스한 곡선 
+                var thisMonthsInterest = (principal - equity) * interest;
+                equity += (monthly - thisMonthsInterest);
+                g.lineTo(paymentToX(p), amountToY(equity));
+            }
+            g.lineTo(paymentToX(payments), amountToY(0));
+            g.closePath();
+            g.fillStyle = "green";
+            g.fill();
+            g.fillText("Total Equity", 20, 35);
+
+            var bal = principal;
+            g.beginPath();
+            g.moveTo(paymentToX(0), amountToY(bal));
+            for (var p = 1; p <= payments; p++) {
+                var thisMonthInterest = bal * interest;
+                bal -= (monthly - thisMonthsInterest);
+                g.lineTo(paymentToX(p), amountToY(bal));
+            }
+            g.lineWidth = 3;
+            g.stroke(); // balance curve 를 그린다. 
+            g.fillStyle = "black";
+            g.fillText("Loan Balance", 20, 50);
+
+            g.textAlign = "center";
+            var y = amountToY(0);
+            for (var year = 1; year * 12 <= payments; year++) {
+                var x = paymentToX(year * 12);
+                g.fillRect(x - 0.5, y - 3, 1, 3);
+                if (year == 1) g.fillText("Year", x, y - 5);
+                if( year % 5 == 0 && year * 12 !== payments)
+                    g.fillText(String(year), x, y - 5);
+            }
+
+            g.testAlign = "right";
+            g.testBaseline = "middle";
+            var ticks = [monthly * payments, principal];
+            var rightEdge = paymentToX(payments);
+            for (var i = 0; i < ticks.length; i++) {
+                var y = amountToY(ticks[i]);
+                g.fillRect(rightEdge - 3, y - 0.5, 3, 1);
+                g.fillText(String(ticks[i].toFixed(0)),
+                    rightEdge - 5, y);
+            }
         }
     </script>
 
