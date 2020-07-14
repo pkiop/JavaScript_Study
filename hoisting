@@ -1,0 +1,24 @@
+<script>
+	// hoisting : 들어올리다. declaration을 아래쪽에 해도 코드 맨위에 선언된 것 처럼 바꿔 적용
+	// var은 hoisting이 되고 let은 안된다.
+
+	/*
+	console.log("hoisting 예제");
+	console.log(x); // undefined (선언만 올라가고 값할당은 안올라간다.)
+	var x = 10;
+	console.log(x); // 10
+	*/
+	
+	console.log("hoisting let은 안됨");
+	console.log(x);
+	let x = 10; // 범위한정을위해 let을 만들었기 때문에 범위를 알수없게 바꾸는 hoisting 적용 x 
+	console.log(x); // syntax error
+
+	// 변수 : 선언단계 -> 초기화단계 -> 할당단계
+	// var : 선언과 초기화 한번에
+	// let : 분리해서
+	
+	// 그래서 어떻게 쓰면?
+	// var은 쓰지마
+	// 일단 const 박고 재할당 필요할때만 var
+</script>
