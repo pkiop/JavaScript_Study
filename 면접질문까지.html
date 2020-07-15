@@ -1,0 +1,57 @@
+<script>
+/*
+복사하ㅏ고지우기
+	1. 이력서 
+----------
+가장 좋아했던 과목
+휴학
+무슨언어 쓸줄알아요? 장단점
+
+2. 자소서
+----------
+각각 가장열심히 했던 것에 대한 질문
+와서 무슨 일 하고 싶은지
+
+3. 함정
+----------
+같이 일하기 싫은 동료
+*/
+	// javascript에서 Encapsulation 
+	function func() {
+		var _name = "hello"; // 변수앞 _는 private 변수 라는 의미
+		return function() {
+			return _name;
+		}
+	}
+
+	//console.log(_name); // error
+	console.log(func()());
+
+	//javascript : prototype 이해 필수
+
+	function Person() {}
+//	Person.prototype.eyes = 2;
+//	Person.prototype.nose = 1;
+	console.log(Person.prototype);
+	var kim = new Person();
+	var park = new Person();
+	console.log("kim : ", kim);
+	console.log("park : ", park);
+	console.log(kim.eyes);
+	console.log(kim.nose);
+	console.log(park.eyes);
+	console.log(park.nose);
+	//Person.prototype.nose = 5 // park안에 nose object 생겨 park는 person의 prototype을 쓰지 않음
+	console.log(kim.eyes);
+	console.log(kim.nose);
+	console.log(park.eyes);
+	console.log(park.nose);
+	
+	//javascript로 html작성
+	window.onload = function() {
+		var heading = document.createElement("h1");
+		var heading_text = document.createTextNode("Big Head!");
+		heading.appendChild(heading_text);
+		document.body.appendChild(heading);
+	}
+</script>
